@@ -2,3 +2,5 @@ gp_wrapper
 danielutils
 mypy
 pylint
+beautifulsoup4
+types-beautifulsoup4
