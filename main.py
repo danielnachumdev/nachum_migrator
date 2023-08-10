@@ -1,12 +1,12 @@
-from typing import Optional, Generator
+from typing import Generator
 from sys import argv
+from pathlib import Path
 from danielutils import get_directories, get_files, error, warning, info
 from bs4 import BeautifulSoup as bs4
 from gp_wrapper import GooglePhotos, GooglePhotosAlbum, GooglePhotosMediaItem
-from pathlib import Path
 from tqdm import tqdm
 
-gp = GooglePhotos()
+gp = GooglePhotos(quota=30)
 EXISTING_ALBUMS = {a.title: a for a in GooglePhotosAlbum.get_albums(gp)}
 INDEX_FILE_NAME = "index.html"
 HR_FOLDER_NAME = "images"
@@ -14,6 +14,9 @@ IMAGE_PAGES = "imagepages"
 
 
 class Album:
+    """a wrapper class to simply uploading the data
+    """
+
     def __init__(self, path: str) -> None:
         self.path = path
         self.files = get_files(path)
@@ -37,15 +40,20 @@ class Album:
         if album_title not in EXISTING_ALBUMS:
             album = gp.create_album(album_title)
         else:
-            album = EXISTING_ALBUMS[album_title]
+            return EXISTING_ALBUMS[album_title]
 
         try:
             description_title = next(filtered_texts)
-            description = ""
+            chunks: list[str] = []
+            tmp_chunk = ""
             for text in filtered_texts:
-                description += text
+                if len(tmp_chunk) + len(text) >= 1000:
+                    chunks.append(tmp_chunk)
+                    tmp_chunk = ""
+                tmp_chunk += text
             # the order matters
-            album.add_description(description)
+            for chunk in chunks[::-1]:
+                album.add_description(chunk)
             album.add_description(description_title)
         except StopIteration:
             warning(f"\tno album description found")
@@ -61,7 +69,7 @@ class Album:
             f"{self.path}/{HR_FOLDER_NAME}/{f}" for f in get_files(f"{self.path}/{HR_FOLDER_NAME}")]
 
         if album.mediaItemsCount >= len(hr_images):
-            info(f"Skipping {self.name}")
+            info(f"\tSkipping {self.name}")
             return
 
         for image in tqdm(hr_images):
@@ -83,6 +91,8 @@ class Album:
                 error(f"{image} has failed!")
 
     def upload(self) -> None:
+        """uploads an album along with relevant data
+        """
         try:
             info(f"Processing {self.name}")
             info("\tAcquiring album")
@@ -95,7 +105,7 @@ class Album:
 
 def main() -> None:
     base_folder = argv[1]
-    for album_folder in get_directories(base_folder):
+    for album_folder in get_directories(base_folder)[2:]:
         Album(f"{base_folder}/{album_folder}").upload()
 
 
