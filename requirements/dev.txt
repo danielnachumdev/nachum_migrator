@@ -4,3 +4,5 @@ mypy
 pylint
 beautifulsoup4
 types-beautifulsoup4
+tqdm
+types-tqdm 
