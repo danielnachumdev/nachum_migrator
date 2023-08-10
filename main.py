@@ -98,58 +98,6 @@ def logic() -> None:
         Album(f"{base_folder}/{album_folder}").upload()
 
 
-def handle_album(album_folder: str) -> None:
-    files = get_files(album_folder)
-    folders = get_directories(album_folder)
-    INDEX = "index.html"
-    if INDEX not in files:
-        error(f"{album_folder}: No {INDEX}")
-        return
-    with open(f"{album_folder}/{INDEX}", "r", encoding="utf8") as f:
-        index_html = f.read()
-    soup = bs4(index_html, features="html.parser")
-    titles = soup.find_all("title")
-    album_title: Optional[str] = None
-    if len(titles) == 1:
-        album_title = titles[0].contents[0]
-
-    if album_title not in EXISTING_ALBUMS:
-        album = gp.create_album(album_title)
-    else:
-        album = EXISTING_ALBUMS[album_title]
-
-    del soup, titles, album_title, index_html
-
-    HR_FOLDER = "images"
-    if HR_FOLDER not in folders:
-        error(f"{album_folder}: No {HR_FOLDER}/")
-        return
-
-    hr_images = [
-        f"{album_folder}/{HR_FOLDER}/{f}" for f in get_files(f"{album_folder}/{HR_FOLDER}")]
-
-    if album.mediaItemsCount >= len(hr_images):
-        info(f"Skipping {album_folder}")
-        return
-
-    IMAGE_PAGES = "imagepages"
-    for image in hr_images:
-        try:
-            image_name = image.split("/")[-1].replace("hr", "").split(".")[0]
-            media: GooglePhotosMediaItem = album.add_media([image])[1][0]
-            with open(f"{album_folder}/{IMAGE_PAGES}/{image_name}.html", "r", encoding="utf8") as f:
-                media_html = f.read()
-            media_soup = bs4(media_html, features="html.parser")
-            try:
-                description = media_soup.find_all(
-                    "div", {"class": "imagetitle"})[0].contents[0]
-                media.set_description(description)
-            except Exception as e:
-                warning(f"{image} has no description")
-        except Exception as e:
-            error(f"{image} has failed!")
-
-
 def main() -> None:
     logic()
 
