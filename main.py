@@ -1,11 +1,11 @@
+import pathlib
 from typing import Generator, Callable
 from sys import argv
 from pathlib import Path
-from danielutils import get_directories, get_files, error, warning, info, ColoredText
+from danielutils import get_directories, get_files, ColoredText
 from bs4 import BeautifulSoup as bs4
-from gp_wrapper import GooglePhotos, GooglePhotosAlbum, GooglePhotosMediaItem
+from gp_wrapper import GooglePhotos, Album, MediaItem, NewMediaItem, SimpleMediaItem, MEDIA_ITEM_BATCH_CREATE_MAXIMUM_IDS
 from tqdm import tqdm
-
 INDEX_FILE_NAME = "index.html"
 HR_FOLDER_NAME = "images"
 IMAGE_PAGES = "imagepages"
@@ -19,9 +19,9 @@ INFO, WARNING, ERROR = [s.ljust(MARGIN) for s in [_INFO, _WARNING, _ERROR]]
 def logic() -> None:
     print(f"{INFO}Initializing GooglePhotos")
     gp = GooglePhotos(quota=30)
-    EXISTING_ALBUMS = {a.title: a for a in GooglePhotosAlbum.get_albums(gp)}
+    EXISTING_ALBUMS = {a.title: a for a in Album.all_albums(gp)}
 
-    class Album:
+    class LocalAlbum:
         """a wrapper class to simply uploading the data
         """
 
@@ -32,7 +32,7 @@ def logic() -> None:
             self.name = Path(self.path).stem
             self.log = logging_function
 
-        def _setup_album(self) -> GooglePhotosAlbum:
+        def _setup_album(self) -> Album:
             self.log(f"{INFO}\tAcquiring album")
             if INDEX_FILE_NAME not in self.files:
                 self.log(f"{ERROR}{self.name}: No {INDEX_FILE_NAME}")
@@ -48,20 +48,20 @@ def logic() -> None:
             album_title = next(filtered_texts)
 
             if album_title not in EXISTING_ALBUMS:
-                album = gp.create_album(album_title)
+                album = Album.create(gp, album_title)
             else:
                 return EXISTING_ALBUMS[album_title]
 
             try:
                 description_title = next(filtered_texts)
-                album.add_description(filtered_texts)
-                album.add_description([description_title])
+                album.add_text(filtered_texts)
+                album.add_text([description_title])
             except StopIteration:
                 self.log(f"{WARNING}\tNo album description found")
 
             return album
 
-        def _upload_media(self, album: GooglePhotosAlbum) -> None:
+        def _upload_media(self, album: Album) -> None:
             if HR_FOLDER_NAME not in self.folders:
                 self.log(f"{ERROR}{self.name}: No {HR_FOLDER_NAME}/")
                 return
@@ -75,33 +75,45 @@ def logic() -> None:
             self.log(f"{INFO}\tUploading Media")
             inner_pbar = tqdm(desc="MediaItems",
                               total=len(hr_images), position=0)
-            for image in hr_images:
+
+            items: list[NewMediaItem] = []
+            for path in hr_images:
+                image_name = path.split("/")[-1].replace("hr", "").split(".")[0]  # noqa
+                with open(f"{self.path}/{IMAGE_PAGES}/{image_name}.html", "r", encoding="utf8") as f:
+                    media_html = f.read()
+                media_soup = bs4(media_html, features="html.parser")
+                description: str = ""
                 try:
-                    image_name = image.split(
-                        "/")[-1].replace("hr", "").split(".")[0]
-                    media: GooglePhotosMediaItem = list(album.add_media([image])[1])[0]  # noqa
-                    with open(f"{self.path}/{IMAGE_PAGES}/{image_name}.html", "r", encoding="utf8") as f:
-                        media_html = f.read()
-                    media_soup = bs4(media_html, features="html.parser")
-                    try:
-                        description = media_soup.find_all(
-                            "div", {"class": "imagetitle"})[0].contents[0]
-                        media.set_description(description)
-                    except Exception as e:
-                        inner_pbar.write(
-                            f"{WARNING}\t{image} has no description!")
-                except Exception as e:
-                    inner_pbar.write(
-                        f"{ERROR}{image} has failed!")
-                    inner_pbar.write(f"\t\t{e}")
+                    description = media_soup.find_all(
+                        "div", {"class": "imagetitle"})[0].contents[0]
+                except Exception as e:  # pylint: disable=broad-exception-caught
+                    inner_pbar.write(f"{WARNING}\t{image_name} has no description!")  # noqa
+                token = MediaItem.upload_media(gp, path)
+                item = NewMediaItem(
+                    description,
+                    SimpleMediaItem(token, image_name)
+                )
+                items.append(item)
                 inner_pbar.update(1)
+
+            batches: list[list[NewMediaItem]] = []
+            batch: list[NewMediaItem] = []
+            for item in items:
+                if len(batch) >= MEDIA_ITEM_BATCH_CREATE_MAXIMUM_IDS:
+                    batches.append(batch)
+                    batch = []
+                batch.append(item)
+            batches.append(batch)
+
+            for batch in batches:
+                MediaItem.batchCreate(gp, batch, album.id)
 
         def upload(self) -> None:
             """uploads an album along with relevant data
             """
             try:
                 self.log(f"{INFO}Processing {self.name}")
-                album: GooglePhotosAlbum = self._setup_album()
+                album: Album = self._setup_album()
                 self._upload_media(album)
             except Exception as e:
                 self.log(f"{ERROR}Failed to process {self.name}")
@@ -109,8 +121,8 @@ def logic() -> None:
     base_folder = argv[1]
     folder_names = get_directories(base_folder)
     outer_pbar = tqdm(desc="Albums", position=1, total=len(folder_names))
-    for album_folder in folder_names:
-        Album(f"{base_folder}/{album_folder}", outer_pbar.write).upload()
+    for album_folder in folder_names[3:]:
+        LocalAlbum(f"{base_folder}/{album_folder}", outer_pbar.write).upload()
         outer_pbar.update(1)
 
 
