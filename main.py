@@ -3,6 +3,7 @@ from sys import argv
 from pathlib import Path
 from danielutils import get_directories, get_files, ColoredText
 from bs4 import BeautifulSoup as bs4
+from bs4.element import Tag
 from tqdm import tqdm
 from gp_wrapper import GooglePhotos, Album, MediaItem, NewMediaItem, SimpleMediaItem,\
     MEDIA_ITEM_BATCH_CREATE_MAXIMUM_IDS
@@ -86,7 +87,7 @@ class LocalAlbum:
 
         return album
 
-    def _upload_media(self, album: Album) -> Optional[list[NewMediaItem]]:
+    def _create_media_items(self, album: Album) -> Optional[list[NewMediaItem]]:
         if HR_FOLDER_NAME not in self.folders:
             self.p.write(f"{ERROR}{self.name}: No {HR_FOLDER_NAME}/")
             return None
@@ -109,6 +110,12 @@ class LocalAlbum:
             description: str = ""
             try:
                 description = media_soup.find_all("div", {"class": "imagetitle"})[0].contents[0]  # noqa
+                if not isinstance(description, str):
+                    if isinstance(description, Tag):
+                        description = description.contents[0]
+                    else:
+                        self.p.write(
+                            f"{ERROR}Unhandled description type {type(description)}")
             except Exception as e:  # pylint: disable=broad-exception-caught
                 self.p.write(f"{WARNING}\t{image_name} has no description!")  # noqa
             token = MediaItem.upload_media(self.gp, path, tqdm=self.p.bars[0])
@@ -134,15 +141,15 @@ class LocalAlbum:
     def upload(self) -> None:
         """uploads an album along with relevant data
         """
-        try:
-            self.p.write(f"{INFO}Processing {self.name}")
-            album: Album = self._setup_album()
-            media_items = self._upload_media(album)
-            if media_items:
-                self._attach_media(album, media_items)
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            self.p.write(f"{ERROR}Failed to process {self.name}")
-            self.p.write(f"\t\t{e}")
+        self.p.write(f"{INFO}Processing {self.name}")
+        album: Album = self._setup_album()
+        media_items = self._create_media_items(album)
+        if media_items:
+            self._attach_media(album, media_items)
+        # try:
+        # except Exception as e:  # pylint: disable=broad-exception-caught
+        #     self.p.write(f"{ERROR}Failed to process {self.name}")
+        #     self.p.write(f"\t\t{e}")
 
 
 def main() -> None:
