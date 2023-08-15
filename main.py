@@ -91,11 +91,10 @@ class LocalAlbum:
             self.p.write(f"{ERROR}{self.name}: No {HR_FOLDER_NAME}/")
             return None
 
-        hr_images = [
-            f"{self.path}/{HR_FOLDER_NAME}/{f}" for f in get_files(f"{self.path}/{HR_FOLDER_NAME}")]
+        hr_images = [f"{self.path}/{HR_FOLDER_NAME}/{f}" for f in get_files(f"{self.path}/{HR_FOLDER_NAME}")]  # noqa
 
         if album.mediaItemsCount >= len(hr_images):
-            self.p.write(f"{INFO}\tSkipping")
+            self.p.write(f"{INFO}\tAlready has all media. Skipping")
             return None
 
         self.p.write(f"{INFO}\tUploading Media")
