@@ -1,7 +1,7 @@
 from typing import Generator, Optional
 from sys import argv
 from pathlib import Path
-from danielutils import get_directories, get_files, ColoredText
+from danielutils import get_directories, get_files, ColoredText, directory_exists
 from bs4 import BeautifulSoup as bs4
 from bs4.element import Tag
 from tqdm import tqdm
@@ -153,7 +153,13 @@ class LocalAlbum:
 
 
 def main() -> None:
+    if not len(argv) == 2:
+        print(f"{ERROR}wrong usage, instead: python {__file__} PATH_TO_DIR")
+        exit(1)
     base_folder = argv[1]
+    if not directory_exists(base_folder):
+        print(f"{ERROR}Can't find directory {base_folder}")
+        exit(1)
     folder_names = get_directories(base_folder)
     p = ProgressBarPool(
         3,
