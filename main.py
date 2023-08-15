@@ -89,14 +89,14 @@ class LocalAlbum:
     def _upload_media(self, album: Album) -> Optional[list[NewMediaItem]]:
         if HR_FOLDER_NAME not in self.folders:
             self.p.write(f"{ERROR}{self.name}: No {HR_FOLDER_NAME}/")
-            return
+            return None
 
         hr_images = [
             f"{self.path}/{HR_FOLDER_NAME}/{f}" for f in get_files(f"{self.path}/{HR_FOLDER_NAME}")]
 
         if album.mediaItemsCount >= len(hr_images):
             self.p.write(f"{INFO}\tSkipping")
-            return
+            return None
 
         self.p.write(f"{INFO}\tUploading Media")
         self.p.bars[1].total = len(hr_images)
