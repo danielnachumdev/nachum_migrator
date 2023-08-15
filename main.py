@@ -86,7 +86,7 @@ class LocalAlbum:
 
         return album
 
-    def _upload_media(self, album: Album) -> None:
+    def _upload_media(self, album: Album) -> Optional[list[NewMediaItem]]:
         if HR_FOLDER_NAME not in self.folders:
             self.p.write(f"{ERROR}{self.name}: No {HR_FOLDER_NAME}/")
             return
@@ -97,6 +97,7 @@ class LocalAlbum:
         if album.mediaItemsCount >= len(hr_images):
             self.p.write(f"{INFO}\tSkipping")
             return
+
         self.p.write(f"{INFO}\tUploading Media")
         self.p.bars[1].total = len(hr_images)
 
@@ -108,18 +109,17 @@ class LocalAlbum:
             media_soup = bs4(media_html, features="html.parser")
             description: str = ""
             try:
-                description = media_soup.find_all(
-                    "div", {"class": "imagetitle"})[0].contents[0]
+                description = media_soup.find_all("div", {"class": "imagetitle"})[0].contents[0]  # noqa
             except Exception as e:  # pylint: disable=broad-exception-caught
                 self.p.write(f"{WARNING}\t{image_name} has no description!")  # noqa
             token = MediaItem.upload_media(self.gp, path, tqdm=self.p.bars[0])
-            item = NewMediaItem(
-                description,
-                SimpleMediaItem(token, image_name)
-            )
+            item = NewMediaItem(description, SimpleMediaItem(token, image_name))  # noqa
             items.append(item)
             self.p.bars[1].update()
 
+        return items
+
+    def _attach_media(self, album: Album, items: list[NewMediaItem]) -> None:
         batches: list[list[NewMediaItem]] = []
         batch: list[NewMediaItem] = []
         for item in items:
@@ -138,14 +138,15 @@ class LocalAlbum:
         try:
             self.p.write(f"{INFO}Processing {self.name}")
             album: Album = self._setup_album()
-            self._upload_media(album)
+            media_items = self._upload_media(album)
+            if media_items:
+                self._attach_media(album, media_items)
         except Exception as e:  # pylint: disable=broad-exception-caught
             self.p.write(f"{ERROR}Failed to process {self.name}")
             self.p.write(f"\t\t{e}")
 
 
-def logic() -> None:
-
+def main() -> None:
     base_folder = argv[1]
     folder_names = get_directories(base_folder)
     p = ProgressBarPool(
@@ -173,10 +174,6 @@ def logic() -> None:
         LocalAlbum(gp, f"{base_folder}/{album_folder}", p).upload()
         p.bars[1].reset()
         p.bars[2].update()
-
-
-def main() -> None:
-    logic()
 
 
 if __name__ == "__main__":
