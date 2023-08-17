@@ -1,11 +1,11 @@
 import sys
 from typing import Generator, Optional
 from pathlib import Path
-from utils import get_directories, get_files, t_dict, t_list, INFO, WARNING, ERROR
 from bs4 import BeautifulSoup as bs4
 from bs4.element import Tag
-from gp_wrapper import GooglePhotos, Album, MediaItem, NewMediaItem, SimpleMediaItem, \
-    MEDIA_ITEM_BATCH_CREATE_MAXIMUM_IDS
+from gp_wrapper import GooglePhotos, Album, MediaItem, NewMediaItem, SimpleMediaItem  # type:ignore
+from gp_wrapper import MEDIA_ITEM_BATCH_CREATE_MAXIMUM_IDS  # type:ignore
+from utils import get_directories, get_files, t_dict, t_list, INFO, WARNING, ERROR
 from progress_bar_pool import ProgressBarPool
 
 
@@ -117,7 +117,7 @@ class LocalAlbum:
         """
         # try:
         self.p.write(f"{INFO}Processing {self.name}")
-        self.album: Album = self._setup_album()
+        self.album = self._setup_album()
         media_items = self._create_media_items(self.album)
         if media_items:
             self._attach_media(self.album, media_items)

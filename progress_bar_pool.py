@@ -1,15 +1,15 @@
 import time
-from abc import ABC, abstractmethod
 from typing import Optional
 from tqdm import tqdm
+from gp_wrapper import ProgressBar  # type:ignore
 from utils import t_list, t_type
-from gp_wrapper import ProgressBar
+
 
 class MockProgressBar(ProgressBar):
-    _instances = []
+    _instances: "t_list[MockProgressBar]" = []
 
     @staticmethod
-    def get_instances() -> t_list["MockProgressBar"]:
+    def get_instances() -> "t_list[MockProgressBar]":
         return MockProgressBar._instances
 
     @staticmethod
@@ -27,7 +27,7 @@ class MockProgressBar(ProgressBar):
         self.desc: str = ""
         self.total: float = 100
         self.initial_value: float = 0
-        self.current_value = 0
+        self.current_value: float = 0
         self.ncols: int = 30
         self.unit: str = "it"
         self.pbar_format = "{l_bar} |{bar}| {n_fmt:.2f}/{total_fmt:.2f}{unit}" \
@@ -38,7 +38,7 @@ class MockProgressBar(ProgressBar):
         self.initial_start_time = time.time()
         self.prev_update: float = self.initial_start_time
         self.delta: float = 0
-        self.prev_value = self.initial_value
+        self.prev_value: float = self.initial_value
 
     def _draw(self) -> None:
         percent = self.current_value / self.total
@@ -51,7 +51,8 @@ class MockProgressBar(ProgressBar):
             total_fmt=self.total,
             elapsed=self.prev_update - self.initial_start_time,
             remaining="?",
-            rate_fmt=(self.current_value - self.prev_value) / self.delta if self.delta != 0 else 0,
+            rate_fmt=(self.current_value - self.prev_value) /
+            self.delta if self.delta != 0 else 0,
             postfix="/s",
             unit=self.unit
         )
@@ -59,7 +60,8 @@ class MockProgressBar(ProgressBar):
 
     def update(self, amount: float = 1):
         self.prev_value = self.current_value
-        self.current_value = min(self.current_value + amount, self.total)
+        self.current_value = min(
+            self.current_value + amount, self.total)  # type:ignore
         current_time = time.time()
         self.delta = current_time - self.prev_update
         self.prev_update = current_time
@@ -82,7 +84,7 @@ class ProgressBarPool:
             pbar_class: t_type[ProgressBar],
             num_of_bars: int = 1,
             global_options: Optional[dict] = None,
-            individual_options: Optional[t_list[Optional[dict]]] = None
+            individual_options: Optional["t_list[Optional[dict]]"] = None
     ) -> None:
         self.bars: t_list[tqdm] = []
         if global_options is None:
@@ -90,7 +92,8 @@ class ProgressBarPool:
         if individual_options is None:
             individual_options = [{} for _ in range(num_of_bars)]
         if len(individual_options) != num_of_bars:
-            raise ValueError("must suply the same number of options as there are bars")
+            raise ValueError(
+                "must suply the same number of options as there are bars")
         for i in range(num_of_bars):
             if individual_options[i] is None:
                 individual_options[i] = {}

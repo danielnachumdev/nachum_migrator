@@ -1,11 +1,10 @@
 import sys
 from sys import argv
-from utils import get_directories, directory_exists
-from gp_wrapper import GooglePhotos
-from progress_bar_pool import ProgressBarPool, MockProgressBar
-from utils import ERROR, INFO, WARNING
-from local_album import LocalAlbum
+from gp_wrapper import GooglePhotos  # type:ignore
 from tqdm import tqdm
+from utils import get_directories, directory_exists, ERROR, INFO, WARNING
+from progress_bar_pool import ProgressBarPool, MockProgressBar
+from local_album import LocalAlbum
 
 INDEX_FILE_NAME = "index.html"
 HR_FOLDER_NAME = "hrimages"
