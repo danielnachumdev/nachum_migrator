@@ -1,7 +1,8 @@
+import sys
 from sys import argv
 from utils import get_directories, directory_exists
 from gp_wrapper import GooglePhotos
-from progress_bar_pool import ProgressBarPool
+from progress_bar_pool import ProgressBarPool, MockProgressBar
 from utils import ERROR, INFO
 from local_album import LocalAlbum
 from tqdm import tqdm
@@ -17,11 +18,12 @@ def main() -> None:
         exit(1)
     base_folder = argv[1]
     if not directory_exists(base_folder):
-        print(f"{ERROR}Can't find directory {base_folder}")
-        exit(1)
+        print(f"{Warning}Can't find directory {base_folder}. Using CWD instead")
+        base_folder = "./"
     folder_names = get_directories(base_folder)
     p = ProgressBarPool(
-        3,
+        tqdm if sys.stdout.isatty() else MockProgressBar,
+        2,
         global_options=dict(
         ),
         individual_options=[
@@ -31,27 +33,27 @@ def main() -> None:
             ),
             dict(
                 desc="MediaItems",
-                leave=False
+                # leave=False
             ),
-            dict(
-                desc="Albums",
-                total=len(folder_names)
-            )
+            # dict(
+            #     desc="Albums",
+            #     total=len(folder_names)
+            # )
         ]
     )
     p.write(f"{INFO}Initializing GooglePhotos")
     gp = GooglePhotos()
-    for album_folder in folder_names:
-        LocalAlbum(
-            gp,
-            f"{base_folder}/{album_folder}",
-            p,
-            INDEX_FILE_NAME,
-            HR_FOLDER_NAME,
-            IMAGE_PAGES
-        ).upload()
-        p.bars[1].reset()
-        p.bars[2].update()
+    # for album_folder in folder_names:
+    LocalAlbum(
+        gp,
+        base_folder,
+        p,
+        INDEX_FILE_NAME,
+        HR_FOLDER_NAME,
+        IMAGE_PAGES
+    ).upload()
+    # p.bars[1].reset()
+    # p.bars[2].update()
 
 
 if __name__ == "__main__":
