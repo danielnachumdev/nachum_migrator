@@ -1,3 +1,3 @@
-gp_wrapper
+gp_wrapper>=0.9.1
 beautifulsoup4
 tqdm
