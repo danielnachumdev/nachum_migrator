@@ -1,5 +1,4 @@
 gp_wrapper
-danielutils
 mypy
 pylint
 beautifulsoup4

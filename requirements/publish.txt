@@ -1,4 +1,3 @@
 gp_wrapper
-danielutils
 beautifulsoup4
 tqdm

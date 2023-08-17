@@ -1,5 +1,6 @@
 .pypirc
 tmp.py
+.idea/
 *.txt
 *client_secret*
 *.zip
