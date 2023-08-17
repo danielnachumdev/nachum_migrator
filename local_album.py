@@ -26,6 +26,7 @@ class LocalAlbum:
         self.index_file_name = index_file_name
         self.hr_folder_name = hr_folder_name
         self.image_pages_folder = image_pages_folder
+        self.album: Album
 
     def _setup_album(self) -> Album:
         self.p.write(f"{INFO}\tAcquiring album")
@@ -56,7 +57,7 @@ class LocalAlbum:
 
         return album
 
-    def _create_media_items(self, album: Album) -> Optional[t_list[NewMediaItem]]:
+    def _create_media_items(self, album: Album) -> Optional["t_list[NewMediaItem]"]:
         if self.hr_folder_name not in self.folders:
             self.p.write(f"{ERROR}{self.name}: No {self.hr_folder_name}/")
             return None
@@ -97,7 +98,7 @@ class LocalAlbum:
 
         return items
 
-    def _attach_media(self, album: Album, items: t_list[NewMediaItem]) -> None:
+    def _attach_media(self, album: Album, items: "t_list[NewMediaItem]") -> None:
         self.p.write(f"{INFO}Attaching uploaded media to account+album")
         batches: t_list[t_list[NewMediaItem]] = []
         batch: t_list[NewMediaItem] = []
@@ -116,10 +117,10 @@ class LocalAlbum:
         """
         # try:
         self.p.write(f"{INFO}Processing {self.name}")
-        album: Album = self._setup_album()
-        media_items = self._create_media_items(album)
+        self.album: Album = self._setup_album()
+        media_items = self._create_media_items(self.album)
         if media_items:
-            self._attach_media(album, media_items)
+            self._attach_media(self.album, media_items)
         # except Exception as e:  # pylint: disable=broad-exception-caught
         #     self.p.write(f"{ERROR}Failed to process {self.name}")
         #     self.p.write(f"\t\t{e}")

@@ -20,7 +20,8 @@ def main() -> None:
             exit(1)
     else:
         if not len(argv) == 1:
-            print(f"{ERROR}Wrong usage. Please supply a path to a directory or none at all")
+            print(
+                f"{ERROR}Wrong usage. Please supply a path to a directory or none at all")
         print(f"{WARNING}No argument supplied. using CWD instead")
         base_folder = "./"
     folder_names = get_directories(base_folder)
@@ -47,14 +48,17 @@ def main() -> None:
     p.write(f"{INFO}Initializing GooglePhotos")
     gp = GooglePhotos()
     # for album_folder in folder_names:
-    LocalAlbum(
+    l_album = LocalAlbum(
         gp,
         base_folder,
         p,
         INDEX_FILE_NAME,
         HR_FOLDER_NAME,
         IMAGE_PAGES
-    ).upload()
+    )
+    l_album.upload()
+    print("View album at: ", l_album.album.productUrl)
+
     # p.bars[1].reset()
     # p.bars[2].update()
 
