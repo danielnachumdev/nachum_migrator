@@ -1,10 +1,10 @@
 import os
-from gp_wrapper.utils import get_python_version
+from gp_wrapper.utils import get_python_version  # type:ignore
 
 if get_python_version() < (3, 9):
     from typing import List as t_list, Dict as t_dict, Type as t_type
 else:
-    from builtins import list as t_list, dict as t_dict, type as t_type
+    from builtins import list as t_list, dict as t_dict, type as t_type  # type:ignore
 
 
 def _get_children(folder: str) -> t_list[str]:
