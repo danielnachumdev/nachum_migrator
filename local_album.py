@@ -71,7 +71,7 @@ class LocalAlbum:
         self.p.bars[1].total = len(hr_images)
 
         items: t_list[NewMediaItem] = []
-        for path in hr_images:
+        for i, path in enumerate(hr_images):
             image_name = path.split("/")[-1].replace("hr", "").split(".")[0]  # noqa
             with open(f"{self.path}/{self.image_pages_folder}/{image_name}.html", "r", encoding="utf8") as f:
                 media_html = f.read()
@@ -87,6 +87,7 @@ class LocalAlbum:
                             f"{ERROR}Unhandled description type {type(description)}")
             except Exception as e:  # pylint: disable=broad-exception-caught
                 self.p.write(f"{WARNING}\t{image_name} has no description!")  # noqa
+            self.p.bars[0].desc = f"Uploading {i}/{len(hr_images)}"
             token = MediaItem.upload_media(self.gp, path, tqdm=self.p.bars[0])
             item = NewMediaItem(description, SimpleMediaItem(token, image_name))  # noqa
             items.append(item)

@@ -3,7 +3,7 @@ from sys import argv
 from utils import get_directories, directory_exists
 from gp_wrapper import GooglePhotos
 from progress_bar_pool import ProgressBarPool, MockProgressBar
-from utils import ERROR, INFO
+from utils import ERROR, INFO, WARNING
 from local_album import LocalAlbum
 from tqdm import tqdm
 
@@ -13,12 +13,15 @@ IMAGE_PAGES = "imagepages"
 
 
 def main() -> None:
-    if not len(argv) == 2:
-        print(f"{ERROR}wrong usage, instead: python {__file__} PATH_TO_DIR")
-        exit(1)
-    base_folder = argv[1]
-    if not directory_exists(base_folder):
-        print(f"{Warning}Can't find directory {base_folder}. Using CWD instead")
+    if len(argv) == 2:
+        base_folder = argv[1]
+        if not directory_exists(base_folder):
+            print(f"{ERROR}Can't find directory {base_folder}")
+            exit(1)
+    else:
+        if not len(argv) == 1:
+            print(f"{ERROR}Wrong usage. Please supply a path to a directory or none at all")
+        print(f"{WARNING}No argument supplied. using CWD instead")
         base_folder = "./"
     folder_names = get_directories(base_folder)
     p = ProgressBarPool(
