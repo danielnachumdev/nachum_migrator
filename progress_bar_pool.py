@@ -1,23 +1,9 @@
+import time
 from abc import ABC, abstractmethod
 from typing import Optional
 from tqdm import tqdm
 from utils import t_list, t_type
-import time
-
-
-class ProgressBar(ABC):
-    @abstractmethod
-    def __init__(self, position, **kwargs): ...
-
-    @abstractmethod
-    def update(self, amount: float = 1): ...
-
-    @abstractmethod
-    def write(self, *args, sep=" ", end="\n"): ...
-
-    @abstractmethod
-    def reset(self): ...
-
+from gp_wrapper import ProgressBar
 
 class MockProgressBar(ProgressBar):
     _instances = []

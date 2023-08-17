@@ -90,7 +90,7 @@ class LocalAlbum:
                 self.p.write(f"{WARNING}\t{image_name} has no description!")  # noqa
             if not sys.stdout.isatty():
                 self.p.bars[0].desc = f"Uploading {i}/{len(hr_images)}"
-            token = MediaItem.upload_media(self.gp, path, tqdm=self.p.bars[0])
+            token = MediaItem.upload_media(self.gp, path, pbar=self.p.bars[0])
             item = NewMediaItem(description, SimpleMediaItem(token, image_name))  # noqa
             items.append(item)
             self.p.bars[1].update()
