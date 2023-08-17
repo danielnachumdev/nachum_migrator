@@ -1,3 +1,4 @@
+import sys
 from typing import Generator, Optional
 from pathlib import Path
 from utils import get_directories, get_files, t_dict, t_list, INFO, WARNING, ERROR
@@ -87,7 +88,8 @@ class LocalAlbum:
                             f"{ERROR}Unhandled description type {type(description)}")
             except Exception as e:  # pylint: disable=broad-exception-caught
                 self.p.write(f"{WARNING}\t{image_name} has no description!")  # noqa
-            self.p.bars[0].desc = f"Uploading {i}/{len(hr_images)}"
+            if not sys.stdout.isatty():
+                self.p.bars[0].desc = f"Uploading {i}/{len(hr_images)}"
             token = MediaItem.upload_media(self.gp, path, tqdm=self.p.bars[0])
             item = NewMediaItem(description, SimpleMediaItem(token, image_name))  # noqa
             items.append(item)
@@ -96,6 +98,7 @@ class LocalAlbum:
         return items
 
     def _attach_media(self, album: Album, items: t_list[NewMediaItem]) -> None:
+        self.p.write(f"{INFO}Attaching uploaded media to account+album")
         batches: t_list[t_list[NewMediaItem]] = []
         batch: t_list[NewMediaItem] = []
         for item in items:
@@ -111,12 +114,12 @@ class LocalAlbum:
     def upload(self) -> None:
         """uploads an album along with relevant data
         """
+        # try:
         self.p.write(f"{INFO}Processing {self.name}")
         album: Album = self._setup_album()
         media_items = self._create_media_items(album)
         if media_items:
             self._attach_media(album, media_items)
-        # try:
         # except Exception as e:  # pylint: disable=broad-exception-caught
         #     self.p.write(f"{ERROR}Failed to process {self.name}")
         #     self.p.write(f"\t\t{e}")
