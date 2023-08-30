@@ -1,4 +1,5 @@
 import sys
+import re
 from typing import Generator, Optional
 from pathlib import Path
 from bs4 import BeautifulSoup as bs4
@@ -34,6 +35,7 @@ class LocalAlbum:
             self.p.write(f"{ERROR}{self.name}: No {self.index_file_name}")
             raise ValueError(
                 f"Can't process album as there is no '{self.index_file_name}' file")
+
         with open(f"{self.path}/{self.index_file_name}", "r", encoding="utf8") as f:
             index_html = f.read()
         soup = bs4(index_html, features="html.parser")
@@ -48,14 +50,24 @@ class LocalAlbum:
         else:
             return self.existing_album[album_title]
 
-        try:
-            description_title = next(filtered_texts)
-            album.add_text(filtered_texts)
-            album.add_text([description_title])
-        except StopIteration:
-            self.p.write(f"{WARNING}\tNo album description found")
+        if not self._is_multi_index():
+            try:
+                description_title = next(filtered_texts)
+                album.add_text(filtered_texts)
+                album.add_text([description_title])
+            except StopIteration:
+                self.p.write(f"{WARNING}\tNo album description found")
 
         return album
+
+    def _is_multi_index(self) -> bool:
+        p_object = Path(self.index_file_name)
+        index_pattern = re.compile(f"{p_object.stem}\d*\{p_object.suffix}")
+        matches = list(
+            map(lambda file: index_pattern.match(file), self.files))
+        index_file_count = sum(
+            map(lambda obj: 1 if obj is not None else 0, matches))
+        return index_file_count > 1
 
     def _create_media_items(self, album: Album) -> Optional["t_list[NewMediaItem]"]:
         if self.hr_folder_name not in self.folders:

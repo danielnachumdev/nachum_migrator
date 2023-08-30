@@ -23,7 +23,6 @@ def main() -> None:
                 f"{ERROR}Wrong usage. Please supply a path to a directory or none at all")
         print(f"{WARNING}No argument supplied. using CWD instead")
         base_folder = "./"
-    folder_names = get_directories(base_folder)
     p = ProgressBarPool(
         tqdm if sys.stdout.isatty() else MockProgressBar,
         2,
@@ -36,17 +35,11 @@ def main() -> None:
             ),
             dict(
                 desc="MediaItems",
-                # leave=False
-            ),
-            # dict(
-            #     desc="Albums",
-            #     total=len(folder_names)
-            # )
+            )
         ]
     )
     p.write(f"{INFO}Initializing GooglePhotos")
     gp = GooglePhotos()
-    # for album_folder in folder_names:
     l_album = LocalAlbum(
         gp,
         base_folder,
@@ -57,9 +50,6 @@ def main() -> None:
     )
     l_album.upload()
     print("View album at: ", l_album.album.productUrl)
-
-    # p.bars[1].reset()
-    # p.bars[2].update()
 
 
 if __name__ == "__main__":

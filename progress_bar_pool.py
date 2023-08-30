@@ -93,7 +93,7 @@ class ProgressBarPool:
             individual_options = [{} for _ in range(num_of_bars)]
         if len(individual_options) != num_of_bars:
             raise ValueError(
-                "must suply the same number of options as there are bars")
+                "must supply the same number of options as there are bars")
         for i in range(num_of_bars):
             if individual_options[i] is None:
                 individual_options[i] = {}
