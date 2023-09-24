@@ -6,8 +6,8 @@ from bs4 import BeautifulSoup as bs4
 from bs4.element import Tag
 from gp_wrapper import GooglePhotos, Album, MediaItem, NewMediaItem, SimpleMediaItem  # type:ignore
 from gp_wrapper import MEDIA_ITEM_BATCH_CREATE_MAXIMUM_IDS  # type:ignore
-from utils import get_directories, get_files, t_dict, t_list, INFO, WARNING, ERROR
-from progress_bar_pool import ProgressBarPool
+from .utils import get_directories, get_files, t_dict, t_list, INFO, WARNING, ERROR
+from .progress_bar_pool import ProgressBarPool
 
 
 class LocalAlbum:
@@ -136,3 +136,8 @@ class LocalAlbum:
         # except Exception as e:  # pylint: disable=broad-exception-caught
         #     self.p.write(f"{ERROR}Failed to process {self.name}")
         #     self.p.write(f"\t\t{e}")
+
+
+__all__ = [
+    'LocalAlbum'
+]

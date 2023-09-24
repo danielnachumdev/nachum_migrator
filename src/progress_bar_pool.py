@@ -2,7 +2,7 @@ import time
 from typing import Optional
 from tqdm import tqdm
 from gp_wrapper import ProgressBar  # type:ignore
-from utils import t_list, t_type
+from .utils import t_list, t_type
 
 
 class MockProgressBar(ProgressBar):

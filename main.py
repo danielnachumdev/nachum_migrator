@@ -2,9 +2,9 @@ import sys
 from sys import argv
 from gp_wrapper import GooglePhotos  # type:ignore
 from tqdm import tqdm
-from utils import get_directories, directory_exists, ERROR, INFO, WARNING
-from progress_bar_pool import ProgressBarPool, MockProgressBar
-from local_album import LocalAlbum
+from src.utils import directory_exists, ERROR, INFO, WARNING
+from src.progress_bar_pool import ProgressBarPool, MockProgressBar
+from src.local_album import LocalAlbum
 
 INDEX_FILE_NAME = "index.html"
 HR_FOLDER_NAME = "hrimages"
@@ -49,7 +49,9 @@ def main() -> None:
         IMAGE_PAGES
     )
     l_album.upload()
-    print("View album at: ", l_album.album.productUrl)
+    p.write()
+    p.write()
+    p.write("View album at: ", l_album.album.productUrl)
 
 
 if __name__ == "__main__":
