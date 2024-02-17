@@ -1,4 +1,4 @@
-gp_wrapper>=0.9.4
+gp_wrapper>=0.9.8
 mypy
 pylint
 beautifulsoup4
